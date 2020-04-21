@@ -1,0 +1,123 @@
+<!-- This is a static file -->
+<!-- served from your routes in server.js -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Present!</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      .whiteboard {
+        position: relative;
+        border: solid black 1px;
+        border-radius: 4px;
+        margin-left: auto;
+        margin-right: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>Draw</h1>
+    </header>
+
+    <main>
+       <canvas width="200" height="200" style="width:200px;height:200px" class="whiteboard" ></canvas>
+    </main>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+      const socket = io('/draw');
+
+      var canvas = document.querySelector('.whiteboard');
+      canvas.height = 200
+      canvas.widht = 200
+      var context = canvas.getContext('2d');
+      var drawing = false
+
+      var current = {
+        color: 'black'
+      };
+
+      canvas.addEventListener('mousedown', onMouseDown, false);
+      canvas.addEventListener('mouseup', onMouseUp, false);
+      canvas.addEventListener('mouseout', onMouseUp, false);
+      canvas.addEventListener('mousemove', throttle(onMouseMove, 10), false);
+
+      //Touch support for mobile devices
+      canvas.addEventListener('touchstart', onMouseDown, false);
+      canvas.addEventListener('touchend', onMouseUp, false);
+      canvas.addEventListener('touchcancel', onMouseUp, false);
+      canvas.addEventListener('touchmove', throttle(onMouseMove, 10), false);
+
+      function drawLine(x0, y0, x1, y1, color, emit){
+        console.log(x0, y0, x1, y1)
+        context.beginPath();
+        context.moveTo(x0, y0);
+        context.lineTo(x1, y1);
+        context.strokeStyle = color;
+        context.lineWidth = 4;
+        context.stroke();
+        context.closePath();
+
+        if (!emit) { return; }
+        var w = canvas.width;
+        var h = canvas.height;
+
+        // IMPORTANT STUFF
+        socket.emit('drawing', {
+          x0: x0 / w,
+          y0: y0 / h,
+          x1: x1 / w,
+          y1: y1 / h
+        });
+        // END IMPORTANT STUFF
+      }
+
+      function onMouseDown(e){
+        drawing = true;
+        var pos = getCursorPosition(canvas, e);
+        current.x = pos.x;
+        current.y = pos.y;
+      }
+
+      function onMouseUp(e){
+        if (!drawing) { return; }
+        drawing = false;
+        var pos = getCursorPosition(canvas, e);
+        drawLine(current.x, current.y, pos.x, pos.y, current.color, true);
+      }
+
+      function onMouseMove(e){
+        if (!drawing) { return; }
+        var pos = getCursorPosition(canvas, e)
+        drawLine(current.x, current.y, pos.x, pos.y, current.color, true);
+        current.x = pos.x;
+        current.y = pos.y;
+      }
+
+      // limit the number of events per second
+      function throttle(callback, delay) {
+        var previousCall = new Date().getTime();
+        return function() {
+          var time = new Date().getTime();
+
+          if ((time - previousCall) >= delay) {
+            previousCall = time;
+            callback.apply(null, arguments);
+          }
+        };
+      }
+
+      function getCursorPosition(canvas, e) {
+        var rect = canvas.getBoundingClientRect();
+        var pos = {
+          x: (e.clientX||e.touches[0].clientX) - rect.left,
+          y: (e.clientY||e.touches[0].clientY) - rect.top
+        }
+        console.log(pos)
+        return pos
+      }
+    </script>
+  </body>
+</html>
