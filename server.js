@@ -21,11 +21,11 @@ app.use(express.static("public"));
 
 // https://expressjs.com/en/starter/basic-routing.html
 app.get("/", (request, response) => {
-  response.sendFile(__dirname + "/index.html");
+  response.sendFile(__dirname + "/draw/index.html");
 });
 
 app.get("/presenter.html", (request, response) => {
-  response.sendFile(__dirname + "/presenter.html");
+  response.sendFile(__dirname + "/draw/presenter.html");
 });
 
 // IMPORTANT STUFF
