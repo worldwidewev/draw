@@ -5,8 +5,8 @@
 // but feel free to use whatever libraries or frameworks you'd like through `package.json`.
 const express = require("express");
 const app = express();
-var http = require("http").createServer(app);
-var io = require("socket.io")(http);
+var http = require('http').createServer(app);
+var io = require('socket.io')(http);
 
 // our default array of dreams
 const dreams = [
@@ -17,33 +17,34 @@ const dreams = [
 
 // make all the files in 'public' available
 // https://expressjs.com/en/starter/static-files.html
-app.use(express.static("public"));
+app.use(express.static(__dirname + "/views"));
 
 // https://expressjs.com/en/starter/basic-routing.html
 app.get("/", (request, response) => {
-  response.sendFile(__dirname + "/draw/index.html");
+  response.sendFile(__dirname + "/views/index.html");
 });
 
 app.get("/presenter.html", (request, response) => {
-  response.sendFile(__dirname + "/draw/presenter.html");
+  response.sendFile(__dirname + "/views/presenter.html");
 });
+
 
 // IMPORTANT STUFF
 
-io.on("connection", socket => {
-  console.log("a user connected");
+io.on('connection', (socket) => {
+  console.log('a user connected');
 });
 
-const draw = io.of("/draw");
-draw.on("connection", socket => {
-  socket.on("drawing", msg => {
-    present.emit("drawing", socket.id, msg);
-  });
-});
+const draw = io.of('/draw');
+draw.on('connection', (socket) => {
+  socket.on('drawing', (msg) => {
+    present.emit('drawing', socket.id, msg)
+  })
+})
 
 // END IMPORTANT STUFF
 
-const present = io.of("/present");
+const present = io.of('/present');
 
 // listen for requests :)
 const listener = http.listen(process.env.PORT, () => {
